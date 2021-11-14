@@ -1,0 +1,36 @@
+//
+// Do any local configuration here
+//
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/etc/bind/zones.rfc1918";
+
+include "/etc/bind/rndc.key";
+controls {
+  inet 127.0.0.1 port 953 allow {
+    127.0.0.1;
+    10.0.10.10;
+	10.0.20.10;
+  } keys { "rndc-key"; }; 
+};
+zone "service" {
+	type master;
+	file "/var/lib/bind/db.service";
+	allow-update { key rndc-key; };
+};
+
+zone "10.0.10.in-addr.arpa" {
+	type master;
+	notify no;
+	file "/var/lib/bind/db.10.0.10";
+	allow-update {key rndc-key;};
+};
+
+zone "20.0.10.in-addr.arpa" {
+	type master;
+	notify no;
+	file "/var/lib/bind/db.20.0.10";
+	allow-update {key rndc-key;};
+};
+

@@ -1,0 +1,13 @@
+[Unit]
+Description=THe backup checker for data files in /local/files
+After=network.target auditd.service
+
+[Service]
+Type=exec
+PIDFile=/var/run/backup.pid
+EnvironmentFile=/etc/backup.conf
+ExecStart=+/usr/lib/backup/backup.sh $NUM_FILES $TOTAL_SIZE
+
+[Install]
+WantedBy=multi-user.target
+Alias=backup.service

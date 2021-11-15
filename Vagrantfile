@@ -175,7 +175,7 @@ Vagrant.configure("2") do |config|
     data.vm.provision "file", source: "data/service_scripts/backup.service", destination: "~/backup.service"
     data.vm.provision "file", source: "data/service_scripts/backup.conf", destination: "~/backup.conf"
     data.vm.provision "shell", inline: <<-SHELL
-     sudo chmod +x /home/vagrant/backup.sh
+     sudo chmod +x /home/vagrant/*.sh
      sudo mkdir /usr/lib/backup
      sudo mv -f /home/vagrant/backup.sh /usr/lib/backup/
      sudo mv -f /home/vagrant/backup.service /etc/systemd/system
@@ -246,6 +246,9 @@ Vagrant.configure("2") do |config|
     #   sudo systemctl start kibana.service
     # SHELL
 
+    # Installing pip and mysql driver for python 3
+    web.vm.provision "file", source: "web/get-pip.py", destination: "~/get-pip.py"
+    web.vm.provision "shell", inline: "sudo python3 /home/vagrant/get-pip.py"
 
     # # Nginx
     #  web.vm.provision "shell", inline: "sudo apt install -y nginx"

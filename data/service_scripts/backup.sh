@@ -17,7 +17,7 @@ while [ TRUE ]; do
     fi
 
     # A time between check-ups.
-    sleep 30
+    sleep $3
 done
 
 

@@ -12,7 +12,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "router" do |router|
     router.vm.hostname = "router"
     router.vm.provider "virtualbox" do |vb|
-      vb.memory = "2048"
+      vb.memory = "3072"
       vb.cpus = "2"
     end
        
@@ -77,10 +77,114 @@ Vagrant.configure("2") do |config|
       sudo systemctl disable isc-dhcp-server6
       sudo systemctl restart isc-dhcp-server
     SHELL
+
+    #Installing wireshark
+    router.vm.provision "shell", inline: "sudo DEBIAN_FRONTEND=noninteractive apt-get install termshark -y"
+
     # Cleaning unused packets
     router.vm.provision "shell", inline: "sudo apt-get clean -y && sudo apt-get autoremove -y"
   end
+
+  ####################################################[DATA]#########################################################################
   
+  config.vm.define "data" do |data|
+    data.vm.hostname = "data"
+    data.vm.provider "virtualbox" do |vb|
+      vb.memory = "4096"
+      vb.cpus = "2"
+    end
+    
+    # intranet 2
+    data.vm.network "private_network", type: "dhcp", virtualbox__intnet: "net2"
+    # Adding a routing
+    data.vm.provision "file", source: "data/50-vagrant.yaml", destination: "~/50-vagrant.yaml"
+    data.vm.provision "shell", inline: <<-SHELL
+      sudo chown root.root 50-vagrant.yaml && sudo chmod 644 50-vagrant.yaml
+      sudo mv -f /home/vagrant/50-vagrant.yaml  /etc/netplan
+      sudo netplan apply
+    SHELL
+    # MySQL port forwarding
+    data.vm.network "forwarded_port", guest: 3306, host: 3306
+    
+    # Extra disks for lvm and mdraid
+    data.vm.disk :disk, name: "lvm_files1", size: "512MB"
+    data.vm.disk :disk, name: "lvm_files2", size: "512MB"
+    data.vm.disk :disk, name: "mdraid_backup1", size: "1GB"
+    data.vm.disk :disk, name: "mdraid_backup2", size: "1GB"
+    
+    # LVM 
+    data.vm.provision "shell", inline: <<-SHELL
+      sudo pvcreate /dev/sdc /dev/sdd
+      sudo vgcreate lvm_files /dev/sdc /dev/sdd
+      sudo lvcreate -m1 -l100%VG --type raid1 -Ay --monitor y -n LV_files lvm_files
+      sudo mkfs.xfs /dev/lvm_files/LV_files
+      sudo mkdir -p /local/files
+      sudo mount /dev/lvm_files/LV_files /local/files/
+      cat /etc/mtab | grep "lvm_files" | sudo tee -a /etc/fstab
+    SHELL
+
+    # RAID-1 (mdraid) for backups
+    data.vm.provision "shell", inline: <<-SHELL
+      yes | sudo mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sde /dev/sdf
+      sudo mkfs.xfs /dev/md0
+      sudo mkdir /local/backups
+      sudo mount /dev/md0 /local/backups/
+      cat /etc/mtab | grep md0 | sudo tee -a /etc/fstab
+    SHELL
+        
+    # System update
+    data.vm.provision "shell", inline: <<-SHELL
+      sudo timedatectl set-timezone Europe/Moscow
+      sudo apt-get update
+      sudo apt-get full-upgrade -y
+      sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams logs
+    
+    # Installing MySQL server
+      sudo apt install -y mysql-server
+    SHELL
+    #Installing mail tools
+    data.vm.provision "shell", inline:"sudo DEBIAN_FRONTEND=noninteractive apt install mailutils -y"
+
+   # MySQL
+   #TODO: See if i can move database to LVM
+   data.vm.provision "file", source: "data/mysqld.cnf", destination: "~/mysqld.cnf"
+   data.vm.provision "shell", inline: <<-SHELL
+      sudo mkdir /local/files/mysql
+      sudo mv -f /home/vagrant/mysqld.cnf /etc/mysql/mysql.conf.d/
+      sudo chown root.root /etc/mysql/mysql.conf.d/mysqld.cnf
+      sudo systemctl restart mysql
+   SHELL
+   #Creating data for web app
+   data.vm.provision "file", source: "data/mysql.sql", destination: "~/mysql.sql"
+   data.vm.provision "file", source: "data/webapp.sql", destination: "~/webapp.sql"
+   data.vm.provision "shell", inline: <<-SHELL
+     sudo mysql mysql < mysql.sql
+     sudo mysql -e "flush privileges"
+     sudo mysql -e "create database webapp" && sudo mysql webapp < webapp.sql
+     rm -f *.sql 
+   SHELL
+
+   # Cleaning unused packets
+   data.vm.provision "shell", inline: "sudo apt-get clean -y && sudo apt-get autoremove -y"
+  
+    # Installing bash scripts from the task
+    # First
+    data.vm.provision "file", source: "data/dataRead.sh", destination: "~/dataRead.sh"
+    #Second
+    data.vm.provision "file", source: "data/service_scripts/backup.sh", destination: "~/backup.sh"
+    data.vm.provision "file", source: "data/service_scripts/backup.service", destination: "~/backup.service"
+    data.vm.provision "file", source: "data/service_scripts/backup.conf", destination: "~/backup.conf"
+    data.vm.provision "shell", inline: <<-SHELL
+     sudo chmod +x /home/vagrant/backup.sh
+     sudo mkdir /usr/lib/backup
+     sudo mv -f /home/vagrant/backup.sh /usr/lib/backup/
+     sudo mv -f /home/vagrant/backup.service /etc/systemd/system
+     sudo mv -f /home/vagrant/backup.conf /etc/ 
+     sudo systemctl start backup
+   SHELL
+
+  end
+
  ########################################################[WEB]##########################################################
   
   config.vm.define "web" do |web|
@@ -162,87 +266,7 @@ Vagrant.configure("2") do |config|
 
   
   
-  ####################################################[DATA]#########################################################################
-  
-  config.vm.define "data" do |data|
-    data.vm.hostname = "data"
-    data.vm.provider "virtualbox" do |vb|
-      vb.memory = "4096"
-      vb.cpus = "2"
-    end
-    
-    # intranet 2
-    data.vm.network "private_network", type: "dhcp", virtualbox__intnet: "net2"
-    # Adding a routing
-    data.vm.provision "file", source: "data/50-vagrant.yaml", destination: "~/50-vagrant.yaml"
-    data.vm.provision "shell", inline: <<-SHELL
-      sudo chown root.root 50-vagrant.yaml && sudo chmod 644 50-vagrant.yaml
-      sudo mv -f /home/vagrant/50-vagrant.yaml  /etc/netplan
-      sudo netplan apply
-    SHELL
-    # MySQL port forwarding
-    data.vm.network "forwarded_port", guest: 3306, host: 3306
-    
-    # Extra disks for lvm and mdraid
-    data.vm.disk :disk, name: "lvm_files1", size: "512MB"
-    data.vm.disk :disk, name: "lvm_files2", size: "512MB"
-    data.vm.disk :disk, name: "mdraid_backup1", size: "1GB"
-    data.vm.disk :disk, name: "mdraid_backup2", size: "1GB"
-    
-    # LVM 
-    data.vm.provision "shell", inline: <<-SHELL
-      sudo pvcreate /dev/sdc /dev/sdd
-      sudo vgcreate lvm_files /dev/sdc /dev/sdd
-      sudo lvcreate -m1 -l100%VG --type raid1 -Ay --monitor y -n LV_files lvm_files
-      sudo mkfs.xfs /dev/lvm_files/LV_files
-      sudo mkdir -p /local/files
-      sudo mount /dev/lvm_files/LV_files /local/files/
-      cat /etc/mtab | grep "lvm_files" | sudo tee -a /etc/fstab
-    SHELL
-
-    # RAID-1 (mdraid) for backups
-    data.vm.provision "shell", inline: <<-SHELL
-      yes | sudo mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sde /dev/sdf
-      sudo mkfs.xfs /dev/md0
-      sudo mkdir /local/backups
-      sudo mount /dev/md0 /local/backups/
-      cat /etc/mtab | grep md0 | sudo tee -a /etc/fstab
-    SHELL
-        
-    # System update
-    data.vm.provision "shell", inline: <<-SHELL
-      sudo timedatectl set-timezone Europe/Moscow
-      sudo apt-get update
-      sudo apt-get full-upgrade -y
-      sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams logs
-    
-    # Installing MySQL server
-      sudo apt install -y mysql-server
-    SHELL
-
-   # MySQL
-   #TODO: See if i can move database to LVM
-   data.vm.provision "file", source: "data/mysqld.cnf", destination: "~/mysqld.cnf"
-   data.vm.provision "shell", inline: <<-SHELL
-      sudo mkdir /local/files/mysql
-      sudo mv -f /home/vagrant/mysqld.cnf /etc/mysql/mysql.conf.d/
-      sudo chown root.root /etc/mysql/mysql.conf.d/mysqld.cnf
-      sudo systemctl restart mysql
-   SHELL
-   #Creating data for web app
-   data.vm.provision "file", source: "data/mysql.sql", destination: "~/mysql.sql"
-   data.vm.provision "file", source: "data/webapp.sql", destination: "~/webapp.sql"
-   data.vm.provision "shell", inline: <<-SHELL
-     sudo mysql mysql < mysql.sql
-     sudo mysql -e "flush privileges"
-     sudo mysql -e "create database webapp" && sudo mysql webapp < webapp.sql
-     rm -f *.sql 
-   SHELL
-
-   # Cleaning unused packets
-    data.vm.provision "shell", inline: "sudo apt-get clean -y && sudo apt-get autoremove -y"
-  end
-
+ 
 end #End of the file *********************************************************************************************
 
 

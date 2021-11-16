@@ -1,5 +1,5 @@
-.vagrant\
-.tmp.driveupload\
-.vscode\
+.vagrant/
+.tmp.driveupload/
+.vscode/
 epam_setup.code-workspace
 

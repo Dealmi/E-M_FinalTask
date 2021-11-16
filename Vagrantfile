@@ -250,21 +250,21 @@ Vagrant.configure("2") do |config|
     web.vm.provision "file", source: "web/get-pip.py", destination: "~/get-pip.py"
     web.vm.provision "shell", inline: "sudo python3 /home/vagrant/get-pip.py"
 
-    # # Nginx
-    #  web.vm.provision "shell", inline: "sudo apt install -y nginx"
-    #  web.vm.provision "file", source: "web/website.conf", destination: "~/website.conf"
-    #  web.vm.provision "shell", inline: <<-SHELL
-    #   sudo rm -f /etc/nginx/sites-enabled/default
-    #   sudo mv -f /home/vagrant/website.conf /etc/nginx/sites-available/website.conf
-    #   sudo ln -s /etc/nginx/sites-available/website.conf /etc/nginx/sites-enabled/website.conf
-    #   #sudo systemctl enable nginx && sudo systemctl start nginx
-    #   mkdir -p /local/files && mkdir /local/scripts
-    #  SHELL
-    #  web.vm.provision "file", source: "web/index.html", destination: "~/index.html"
-    #  web.vm.provision "shell", inline: "sudo mv -f /home/vagrant/index.html /local/files/index.html"
+    # Nginx
+    web.vm.provision "shell", inline: "sudo apt install -y nginx"
+    web.vm.provision "file", source: "web/website.conf", destination: "~/website.conf"
+    web.vm.provision "shell", inline: <<-SHELL
+      sudo rm -f /etc/nginx/sites-enabled/default
+      sudo mv -f /home/vagrant/website.conf /etc/nginx/sites-available/website.conf
+      sudo ln -s /etc/nginx/sites-available/website.conf /etc/nginx/sites-enabled/website.conf
+      #sudo systemctl enable nginx && sudo systemctl start nginx
+      mkdir -p /local/files && mkdir /local/scripts
+     SHELL
+    web.vm.provision "file", source: "web/index.html", destination: "~/index.html"
+    web.vm.provision "shell", inline: "sudo mv -f /home/vagrant/index.html /local/files/index.html"
      
-    #  # Cleaning unused packets
-    #  web.vm.provision "shell", inline: "sudo apt-get clean -y && sudo apt-get autoremove -y"
+     # Cleaning unused packets
+    web.vm.provision "shell", inline: "sudo apt-get clean -y && sudo apt-get autoremove -y"
   end
 
   

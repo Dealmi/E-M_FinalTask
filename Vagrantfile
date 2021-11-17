@@ -260,11 +260,15 @@ Vagrant.configure("2") do |config|
       sudo ln -s /etc/nginx/sites-available/website.conf /etc/nginx/sites-enabled/website.conf
       sudo systemctl enable nginx && sudo systemctl start nginx
       mkdir -p /local/files && mkdir /local/scripts
-     SHELL
+    SHELL
     web.vm.provision "file", source: "web/index.html", destination: "~/index.html"
-    web.vm.provision "shell", inline: "sudo mv -f /home/vagrant/index.html /local/files/index.html"
-     
-     # Cleaning unused packets
+    web.vm.provision "file", source: "web/getData.py", destination: "~/getData.py"
+    web.vm.provision "shell", inline: <<-SHELL
+      sudo mv -f /home/vagrant/index.html /local/files/index.html
+      sudo mv -f /home/vagrant/getData.py /local/scripts/
+      sudo chmod +x /local/scripts/getData.py
+    SHELL
+    # Cleaning unused packets
     web.vm.provision "shell", inline: "sudo apt-get clean -y && sudo apt-get autoremove -y"
   end
 

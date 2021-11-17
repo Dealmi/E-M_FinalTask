@@ -1,27 +1,26 @@
-##!/bin/python3
+#!/bin/python3
 
 import mysql.connector #This is python's MySQL driver
 
 #Let's connect to the database!
-mydb = mysql.connector.connect(
-  #host="data",
-  host="localhost",
+myDb = mysql.connector.connect(
+  host="data",
   user="app",
   password="1qaz@WSX",
   database="webapp"
 )
 
 # Let's make a SELECT request!
-mycursor = mydb.cursor()
-mycursor.execute("SELECT Articles.id, magazines.name, article_types.type, author.author \
+myCursor = myDb.cursor()
+myCursor.execute("SELECT Articles.id, magazines.name, article_types.type, author.author \
 FROM (((webapp.Articles \
 INNER JOIN webapp.magazines ON Articles.magazines_id = magazines.id) \
 INNER JOIN webapp.article_types ON Articles.article_types_id = article_types.id) \
 INNER JOIN webapp.author ON Articles.author_id = author.id) order by Articles.id;") 
-result = mycursor.fetchall() #list of tuples
+result = myCursor.fetchall() #list of tuples
 
 # Let's make a webpage!
-news=open("news.html", "w")
+news=open("/local/files/news.html", "w")
 # The upper part of the html page
 upperHtml='''
 <!DOCTYPE html>
@@ -79,4 +78,3 @@ bottomHtml='''</table>
 news.write(bottomHtml)
 
 news.close()
-

@@ -257,7 +257,7 @@ Vagrant.configure("2") do |config|
       sudo rm -f /etc/nginx/sites-enabled/default
       sudo mv -f /home/vagrant/website.conf /etc/nginx/sites-available/website.conf
       sudo ln -s /etc/nginx/sites-available/website.conf /etc/nginx/sites-enabled/website.conf
-      #sudo systemctl enable nginx && sudo systemctl start nginx
+      sudo systemctl enable nginx && sudo systemctl start nginx
       mkdir -p /local/files && mkdir /local/scripts
      SHELL
     web.vm.provision "file", source: "web/index.html", destination: "~/index.html"

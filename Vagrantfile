@@ -249,7 +249,8 @@ Vagrant.configure("2") do |config|
     # Installing pip and mysql driver for python 3
     web.vm.provision "file", source: "web/get-pip.py", destination: "~/get-pip.py"
     web.vm.provision "shell", inline: "sudo python3 /home/vagrant/get-pip.py"
-
+    web.vm.provision "shell", inline: "sudo pip install mysql-connector-python"
+    
     # Nginx
     web.vm.provision "shell", inline: "sudo apt install -y nginx"
     web.vm.provision "file", source: "web/website.conf", destination: "~/website.conf"

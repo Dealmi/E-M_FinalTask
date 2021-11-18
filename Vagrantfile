@@ -211,40 +211,40 @@ Vagrant.configure("2") do |config|
     # Updating the system
     web.vm.provision "shell", inline: <<-SHELL
       sudo timedatectl set-timezone Europe/Moscow
-      # sudo apt-get update
-      # sudo apt-get full-upgrade -y 
+      sudo apt-get update
+      sudo apt-get full-upgrade -y 
       sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams logs
       #apt install -y iptables
     SHELL
      
     # Elasticsearch
-    # web.vm.provision "shell", inline: <<-SHELL
-    #   wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -  
-    #   sudo apt-get install apt-transport-https
-    #   echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list
-    #   sudo apt-get update && sudo apt-get install elasticsearch
-    #   sudo /bin/systemctl daemon-reload
-    #   sudo /bin/systemctl enable elasticsearch.service
-    # SHELL
-    # web.vm.provision "file", source: "web/elasticsearch.yml", destination: "~/elasticsearch.yml"
-    # web.vm.provision "shell", inline: <<-SHELL
-    #   sudo mv -f /home/vagrant/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml
-    #   sudo systemctl start elasticsearch.service
-    # SHELL
-    # #Kibana
-    # web.vm.provision "shell", inline: <<-SHELL
-    #   sudo apt-get install kibana
-    #   sudo /bin/systemctl daemon-reload
-    #   sudo /bin/systemctl enable kibana.service
-    # SHELL
-    # web.vm.provision "file", source: "web/kibana.yml", destination: "~/kibana.yml"  
-    # web.vm.provision "shell", inline: <<-SHELL
-    #   echo $(yes | sudo /usr/share/elasticsearch/bin/elasticsearch-setup-passwords auto) >> /home/vagrant/elasticpass
-    #   echo "elasticsearch.password: $( cat /home/vagrant/elasticpass | sed 's/PASSWORD/\\n/g' | grep "kibana_system =" | awk {'print $3'} )" >> /home/vagrant/kibana.yml
-    #   sudo mv -f /home/vagrant/kibana.yml /etc/kibana/
-    #   sudo chown root.kibana /etc/kibana/kibana.yml  
-    #   sudo systemctl start kibana.service
-    # SHELL
+    web.vm.provision "shell", inline: <<-SHELL
+      wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -  
+      sudo apt-get install apt-transport-https
+      echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list
+      sudo apt-get update && sudo apt-get install elasticsearch
+      sudo /bin/systemctl daemon-reload
+      sudo /bin/systemctl enable elasticsearch.service
+    SHELL
+    web.vm.provision "file", source: "web/elasticsearch.yml", destination: "~/elasticsearch.yml"
+    web.vm.provision "shell", inline: <<-SHELL
+      sudo mv -f /home/vagrant/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml
+      sudo systemctl start elasticsearch.service
+    SHELL
+    #Kibana
+    web.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get install kibana
+      sudo /bin/systemctl daemon-reload
+      sudo /bin/systemctl enable kibana.service
+    SHELL
+    web.vm.provision "file", source: "web/kibana.yml", destination: "~/kibana.yml"  
+    web.vm.provision "shell", inline: <<-SHELL
+      echo $(yes | sudo /usr/share/elasticsearch/bin/elasticsearch-setup-passwords auto) >> /home/vagrant/elasticpass
+      echo "elasticsearch.password: $( cat /home/vagrant/elasticpass | sed 's/PASSWORD/\\n/g' | grep "kibana_system =" | awk {'print $3'} )" >> /home/vagrant/kibana.yml
+      sudo mv -f /home/vagrant/kibana.yml /etc/kibana/
+      sudo chown root.kibana /etc/kibana/kibana.yml  
+      sudo systemctl start kibana.service
+    SHELL
 
     # Installing pip and mysql driver for python 3
     web.vm.provision "file", source: "web/get-pip.py", destination: "~/get-pip.py"
@@ -261,12 +261,14 @@ Vagrant.configure("2") do |config|
       sudo systemctl enable nginx && sudo systemctl start nginx
       mkdir -p /local/files && mkdir /local/scripts
     SHELL
+    #Adding files to the web-server
     web.vm.provision "file", source: "web/index.html", destination: "~/index.html"
     web.vm.provision "file", source: "web/getData.py", destination: "~/getData.py"
+    web.vm.provision "file", source: "web/crontab", destination: "~/crontab"
     web.vm.provision "shell", inline: <<-SHELL
       sudo mv -f /home/vagrant/index.html /local/files/index.html
       sudo mv -f /home/vagrant/getData.py /local/scripts/
-      sudo chmod +x /local/scripts/getData.py
+      sudo chown root.root /home/vagrant/crontab && sudo mv -f /home/vagrant/crontab /etc/
     SHELL
     # Cleaning unused packets
     web.vm.provision "shell", inline: "sudo apt-get clean -y && sudo apt-get autoremove -y"

@@ -167,10 +167,10 @@ Vagrant.configure("2") do |config|
    # Cleaning unused packets
    data.vm.provision "shell", inline: "sudo apt-get clean -y && sudo apt-get autoremove -y"
   
-    # Installing bash scripts from the task
+    # Installing bash scripts from the task:
     # First
     data.vm.provision "file", source: "data/dataRead.sh", destination: "~/dataRead.sh"
-    #Second
+    # Second
     data.vm.provision "file", source: "data/service_scripts/backup.sh", destination: "~/backup.sh"
     data.vm.provision "file", source: "data/service_scripts/backup.service", destination: "~/backup.service"
     data.vm.provision "file", source: "data/service_scripts/backup.conf", destination: "~/backup.conf"
@@ -220,9 +220,9 @@ Vagrant.configure("2") do |config|
     # Elasticsearch
     web.vm.provision "shell", inline: <<-SHELL
       wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -  
-      sudo apt-get install apt-transport-https
+      sudo apt-get install apt-transport-https -y
       echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list
-      sudo apt-get update && sudo apt-get install elasticsearch
+      sudo apt-get update && sudo apt-get install elasticsearch -y
       sudo /bin/systemctl daemon-reload
       sudo /bin/systemctl enable elasticsearch.service
     SHELL
@@ -233,7 +233,7 @@ Vagrant.configure("2") do |config|
     SHELL
     #Kibana
     web.vm.provision "shell", inline: <<-SHELL
-      sudo apt-get install kibana
+      sudo apt install kibana -y
       sudo /bin/systemctl daemon-reload
       sudo /bin/systemctl enable kibana.service
     SHELL

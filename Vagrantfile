@@ -246,6 +246,13 @@ Vagrant.configure("2") do |config|
       sudo systemctl start kibana.service
     SHELL
 
+    #Elastic-agent
+    web.vm.provision "shell", inline: <<-SHELL
+      sudo apt install elastic-agent -y
+      
+    
+    SHELL
+
     # Installing pip and mysql driver for python 3
     web.vm.provision "file", source: "web/get-pip.py", destination: "~/get-pip.py"
     web.vm.provision "shell", inline: "sudo python3 /home/vagrant/get-pip.py"

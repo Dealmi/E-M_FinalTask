@@ -37,3 +37,4 @@ xpack.ilm.enabled: 'true'
 
 xpack.sql.enabled: 'true'
 
+action.auto_create_index: '*'

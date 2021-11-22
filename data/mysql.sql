@@ -1,15 +1,13 @@
-CREATE DATABASE  IF NOT EXISTS `mysql` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `mysql`;
--- MySQL dump 10.13  Distrib 8.0.26, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.27, for Linux (x86_64)
 --
--- Host: 127.0.0.1    Database: mysql
+-- Host: localhost    Database: mysql
 -- ------------------------------------------------------
--- Server version	8.0.26-0ubuntu0.20.04.3
+-- Server version	8.0.27-0ubuntu0.20.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8 */;
+/*!50503 SET NAMES utf8mb4 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -26,10 +24,10 @@ DROP TABLE IF EXISTS `columns_priv`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `columns_priv` (
   `Host` char(255) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL DEFAULT '',
-  `Db` char(64) COLLATE utf8_bin NOT NULL DEFAULT '',
-  `User` char(32) COLLATE utf8_bin NOT NULL DEFAULT '',
-  `Table_name` char(64) COLLATE utf8_bin NOT NULL DEFAULT '',
-  `Column_name` char(64) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `Db` char(64) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
+  `User` char(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
+  `Table_name` char(64) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
+  `Column_name` char(64) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Column_priv` set('Select','Insert','Update','References') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
   PRIMARY KEY (`Host`,`Db`,`User`,`Table_name`,`Column_name`)
@@ -78,8 +76,8 @@ DROP TABLE IF EXISTS `db`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `db` (
   `Host` char(255) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL DEFAULT '',
-  `Db` char(64) COLLATE utf8_bin NOT NULL DEFAULT '',
-  `User` char(32) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `Db` char(64) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
+  `User` char(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `Select_priv` enum('N','Y') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'N',
   `Insert_priv` enum('N','Y') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'N',
   `Update_priv` enum('N','Y') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'N',
@@ -110,7 +108,7 @@ CREATE TABLE `db` (
 
 LOCK TABLES `db` WRITE;
 /*!40000 ALTER TABLE `db` DISABLE KEYS */;
-INSERT INTO `db` VALUES ('%','%','dbadmin','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y'),('localhost','performance_schema','mysql.session','Y','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N'),('localhost','sys','mysql.sys','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','Y'),('web','webapp','app','Y','Y','Y','Y','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N');
+INSERT INTO `db` VALUES ('%','%','dbadmin','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y'),('localhost','performance_schema','mysql.session','Y','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N'),('localhost','sys','mysql.sys','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','Y'),('web.service','webapp','app','Y','Y','Y','Y','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N');
 /*!40000 ALTER TABLE `db` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -123,9 +121,9 @@ DROP TABLE IF EXISTS `default_roles`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `default_roles` (
   `HOST` char(255) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL DEFAULT '',
-  `USER` char(32) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `USER` char(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `DEFAULT_ROLE_HOST` char(255) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL DEFAULT '%',
-  `DEFAULT_ROLE_USER` char(32) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `DEFAULT_ROLE_USER` char(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   PRIMARY KEY (`HOST`,`USER`,`DEFAULT_ROLE_HOST`,`DEFAULT_ROLE_USER`)
 ) /*!50100 TABLESPACE `mysql` */ ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8_bin STATS_PERSISTENT=0 ROW_FORMAT=DYNAMIC COMMENT='Default roles';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -176,9 +174,9 @@ DROP TABLE IF EXISTS `func`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `func` (
-  `name` char(64) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `name` char(64) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `ret` tinyint NOT NULL DEFAULT '0',
-  `dl` char(128) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `dl` char(128) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `type` enum('function','aggregate') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   PRIMARY KEY (`name`)
 ) /*!50100 TABLESPACE `mysql` */ ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8_bin STATS_PERSISTENT=0 ROW_FORMAT=DYNAMIC COMMENT='User defined functions';
@@ -201,7 +199,7 @@ DROP TABLE IF EXISTS `global_grants`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `global_grants` (
-  `USER` char(32) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `USER` char(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `HOST` char(255) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL DEFAULT '',
   `PRIV` char(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
   `WITH_GRANT_OPTION` enum('N','Y') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'N',
@@ -344,7 +342,7 @@ UNLOCK TABLES;
 --
 
 /*!40000 ALTER TABLE `innodb_index_stats` DISABLE KEYS */;
-INSERT  IGNORE INTO `innodb_index_stats` VALUES ('mysql','component','PRIMARY','2021-10-14 09:07:42','n_diff_pfx01',0,1,'component_id'),('mysql','component','PRIMARY','2021-10-14 09:07:42','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('mysql','component','PRIMARY','2021-10-14 09:07:42','size',1,NULL,'Number of pages in the index'),('sys','sys_config','PRIMARY','2021-10-14 09:07:44','n_diff_pfx01',6,1,'variable'),('sys','sys_config','PRIMARY','2021-10-14 09:07:44','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('sys','sys_config','PRIMARY','2021-10-14 09:07:44','size',1,NULL,'Number of pages in the index'),('webapp','Articles','PRIMARY','2021-10-15 22:38:55','n_diff_pfx01',4,1,'id'),('webapp','Articles','PRIMARY','2021-10-15 22:38:55','n_diff_pfx02',4,1,'id,magazines_id'),('webapp','Articles','PRIMARY','2021-10-15 22:38:55','n_diff_pfx03',4,1,'id,magazines_id,article_types_id'),('webapp','Articles','PRIMARY','2021-10-15 22:38:55','n_diff_pfx04',4,1,'id,magazines_id,article_types_id,author_id'),('webapp','Articles','PRIMARY','2021-10-15 22:38:55','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','Articles','PRIMARY','2021-10-15 22:38:55','size',1,NULL,'Number of pages in the index'),('webapp','Articles','fk_Articles_article_types_idx','2021-10-15 22:38:55','n_diff_pfx01',3,1,'article_types_id'),('webapp','Articles','fk_Articles_article_types_idx','2021-10-15 22:38:55','n_diff_pfx02',4,1,'article_types_id,id'),('webapp','Articles','fk_Articles_article_types_idx','2021-10-15 22:38:55','n_diff_pfx03',4,1,'article_types_id,id,magazines_id'),('webapp','Articles','fk_Articles_article_types_idx','2021-10-15 22:38:55','n_diff_pfx04',4,1,'article_types_id,id,magazines_id,author_id'),('webapp','Articles','fk_Articles_article_types_idx','2021-10-15 22:38:55','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','Articles','fk_Articles_article_types_idx','2021-10-15 22:38:55','size',1,NULL,'Number of pages in the index'),('webapp','Articles','fk_Articles_author_idx','2021-10-15 22:38:55','n_diff_pfx01',4,1,'author_id'),('webapp','Articles','fk_Articles_author_idx','2021-10-15 22:38:55','n_diff_pfx02',4,1,'author_id,id'),('webapp','Articles','fk_Articles_author_idx','2021-10-15 22:38:55','n_diff_pfx03',4,1,'author_id,id,magazines_id'),('webapp','Articles','fk_Articles_author_idx','2021-10-15 22:38:55','n_diff_pfx04',4,1,'author_id,id,magazines_id,article_types_id'),('webapp','Articles','fk_Articles_author_idx','2021-10-15 22:38:55','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','Articles','fk_Articles_author_idx','2021-10-15 22:38:55','size',1,NULL,'Number of pages in the index'),('webapp','Articles','fk_Articles_magazines_idx','2021-10-15 22:38:55','n_diff_pfx01',3,1,'magazines_id'),('webapp','Articles','fk_Articles_magazines_idx','2021-10-15 22:38:55','n_diff_pfx02',4,1,'magazines_id,id'),('webapp','Articles','fk_Articles_magazines_idx','2021-10-15 22:38:55','n_diff_pfx03',4,1,'magazines_id,id,article_types_id'),('webapp','Articles','fk_Articles_magazines_idx','2021-10-15 22:38:55','n_diff_pfx04',4,1,'magazines_id,id,article_types_id,author_id'),('webapp','Articles','fk_Articles_magazines_idx','2021-10-15 22:38:55','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','Articles','fk_Articles_magazines_idx','2021-10-15 22:38:55','size',1,NULL,'Number of pages in the index'),('webapp','Articles','idArticles_UNIQUE','2021-10-15 22:38:55','n_diff_pfx01',4,1,'id'),('webapp','Articles','idArticles_UNIQUE','2021-10-15 22:38:55','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','Articles','idArticles_UNIQUE','2021-10-15 22:38:55','size',1,NULL,'Number of pages in the index'),('webapp','article_types','PRIMARY','2021-10-14 12:00:06','n_diff_pfx01',3,1,'id'),('webapp','article_types','PRIMARY','2021-10-14 12:00:06','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','article_types','PRIMARY','2021-10-14 12:00:06','size',1,NULL,'Number of pages in the index'),('webapp','article_types','id_UNIQUE','2021-10-14 12:00:06','n_diff_pfx01',3,1,'id'),('webapp','article_types','id_UNIQUE','2021-10-14 12:00:06','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','article_types','id_UNIQUE','2021-10-14 12:00:06','size',1,NULL,'Number of pages in the index'),('webapp','author','PRIMARY','2021-10-14 12:00:16','n_diff_pfx01',4,1,'id'),('webapp','author','PRIMARY','2021-10-14 12:00:16','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','author','PRIMARY','2021-10-14 12:00:16','size',1,NULL,'Number of pages in the index'),('webapp','author','id_UNIQUE','2021-10-14 12:00:16','n_diff_pfx01',4,1,'id'),('webapp','author','id_UNIQUE','2021-10-14 12:00:16','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','author','id_UNIQUE','2021-10-14 12:00:16','size',1,NULL,'Number of pages in the index'),('webapp','magazines','PRIMARY','2021-10-14 12:00:26','n_diff_pfx01',3,1,'id'),('webapp','magazines','PRIMARY','2021-10-14 12:00:26','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','magazines','PRIMARY','2021-10-14 12:00:26','size',1,NULL,'Number of pages in the index'),('webapp','magazines','id_UNIQUE','2021-10-14 12:00:26','n_diff_pfx01',3,1,'id'),('webapp','magazines','id_UNIQUE','2021-10-14 12:00:26','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','magazines','id_UNIQUE','2021-10-14 12:00:26','size',1,NULL,'Number of pages in the index');
+INSERT  IGNORE INTO `innodb_index_stats` VALUES ('mysql','component','PRIMARY','2021-11-19 15:38:23','n_diff_pfx01',0,1,'component_id'),('mysql','component','PRIMARY','2021-11-19 15:38:23','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('mysql','component','PRIMARY','2021-11-19 15:38:23','size',1,NULL,'Number of pages in the index'),('sys','sys_config','PRIMARY','2021-11-19 15:37:33','n_diff_pfx01',2,1,'variable'),('sys','sys_config','PRIMARY','2021-11-19 15:37:33','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('sys','sys_config','PRIMARY','2021-11-19 15:37:33','size',1,NULL,'Number of pages in the index'),('webapp','Articles','PRIMARY','2021-11-19 15:38:54','n_diff_pfx01',4,1,'id'),('webapp','Articles','PRIMARY','2021-11-19 15:38:54','n_diff_pfx02',4,1,'id,magazines_id'),('webapp','Articles','PRIMARY','2021-11-19 15:38:54','n_diff_pfx03',4,1,'id,magazines_id,article_types_id'),('webapp','Articles','PRIMARY','2021-11-19 15:38:54','n_diff_pfx04',4,1,'id,magazines_id,article_types_id,author_id'),('webapp','Articles','PRIMARY','2021-11-19 15:38:54','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','Articles','PRIMARY','2021-11-19 15:38:54','size',1,NULL,'Number of pages in the index'),('webapp','Articles','fk_Articles_article_types_idx','2021-11-19 15:38:54','n_diff_pfx01',3,1,'article_types_id'),('webapp','Articles','fk_Articles_article_types_idx','2021-11-19 15:38:54','n_diff_pfx02',4,1,'article_types_id,id'),('webapp','Articles','fk_Articles_article_types_idx','2021-11-19 15:38:54','n_diff_pfx03',4,1,'article_types_id,id,magazines_id'),('webapp','Articles','fk_Articles_article_types_idx','2021-11-19 15:38:54','n_diff_pfx04',4,1,'article_types_id,id,magazines_id,author_id'),('webapp','Articles','fk_Articles_article_types_idx','2021-11-19 15:38:54','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','Articles','fk_Articles_article_types_idx','2021-11-19 15:38:54','size',1,NULL,'Number of pages in the index'),('webapp','Articles','fk_Articles_author_idx','2021-11-19 15:38:54','n_diff_pfx01',4,1,'author_id'),('webapp','Articles','fk_Articles_author_idx','2021-11-19 15:38:54','n_diff_pfx02',4,1,'author_id,id'),('webapp','Articles','fk_Articles_author_idx','2021-11-19 15:38:54','n_diff_pfx03',4,1,'author_id,id,magazines_id'),('webapp','Articles','fk_Articles_author_idx','2021-11-19 15:38:54','n_diff_pfx04',4,1,'author_id,id,magazines_id,article_types_id'),('webapp','Articles','fk_Articles_author_idx','2021-11-19 15:38:54','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','Articles','fk_Articles_author_idx','2021-11-19 15:38:54','size',1,NULL,'Number of pages in the index'),('webapp','Articles','fk_Articles_magazines_idx','2021-11-19 15:38:54','n_diff_pfx01',3,1,'magazines_id'),('webapp','Articles','fk_Articles_magazines_idx','2021-11-19 15:38:54','n_diff_pfx02',4,1,'magazines_id,id'),('webapp','Articles','fk_Articles_magazines_idx','2021-11-19 15:38:54','n_diff_pfx03',4,1,'magazines_id,id,article_types_id'),('webapp','Articles','fk_Articles_magazines_idx','2021-11-19 15:38:54','n_diff_pfx04',4,1,'magazines_id,id,article_types_id,author_id'),('webapp','Articles','fk_Articles_magazines_idx','2021-11-19 15:38:54','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','Articles','fk_Articles_magazines_idx','2021-11-19 15:38:54','size',1,NULL,'Number of pages in the index'),('webapp','Articles','idArticles_UNIQUE','2021-11-19 15:38:54','n_diff_pfx01',4,1,'id'),('webapp','Articles','idArticles_UNIQUE','2021-11-19 15:38:54','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','Articles','idArticles_UNIQUE','2021-11-19 15:38:54','size',1,NULL,'Number of pages in the index'),('webapp','article_types','PRIMARY','2021-11-19 15:38:24','n_diff_pfx01',3,1,'id'),('webapp','article_types','PRIMARY','2021-11-19 15:38:24','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','article_types','PRIMARY','2021-11-19 15:38:24','size',1,NULL,'Number of pages in the index'),('webapp','article_types','id_UNIQUE','2021-11-19 15:38:24','n_diff_pfx01',3,1,'id'),('webapp','article_types','id_UNIQUE','2021-11-19 15:38:24','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','article_types','id_UNIQUE','2021-11-19 15:38:24','size',1,NULL,'Number of pages in the index'),('webapp','author','PRIMARY','2021-11-19 15:38:34','n_diff_pfx01',4,1,'id'),('webapp','author','PRIMARY','2021-11-19 15:38:34','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','author','PRIMARY','2021-11-19 15:38:34','size',1,NULL,'Number of pages in the index'),('webapp','author','id_UNIQUE','2021-11-19 15:38:34','n_diff_pfx01',4,1,'id'),('webapp','author','id_UNIQUE','2021-11-19 15:38:34','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','author','id_UNIQUE','2021-11-19 15:38:34','size',1,NULL,'Number of pages in the index'),('webapp','magazines','PRIMARY','2021-11-19 15:38:44','n_diff_pfx01',3,1,'id'),('webapp','magazines','PRIMARY','2021-11-19 15:38:44','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','magazines','PRIMARY','2021-11-19 15:38:44','size',1,NULL,'Number of pages in the index'),('webapp','magazines','id_UNIQUE','2021-11-19 15:38:44','n_diff_pfx01',3,1,'id'),('webapp','magazines','id_UNIQUE','2021-11-19 15:38:44','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('webapp','magazines','id_UNIQUE','2021-11-19 15:38:44','size',1,NULL,'Number of pages in the index');
 /*!40000 ALTER TABLE `innodb_index_stats` ENABLE KEYS */;
 
 --
@@ -352,7 +350,7 @@ INSERT  IGNORE INTO `innodb_index_stats` VALUES ('mysql','component','PRIMARY','
 --
 
 /*!40000 ALTER TABLE `innodb_table_stats` DISABLE KEYS */;
-INSERT  IGNORE INTO `innodb_table_stats` VALUES ('mysql','component','2021-10-14 09:07:42',0,1,0),('sys','sys_config','2021-10-14 09:07:44',6,1,0),('webapp','Articles','2021-10-15 22:38:55',4,1,4),('webapp','article_types','2021-10-14 12:00:06',3,1,1),('webapp','author','2021-10-14 12:00:16',4,1,1),('webapp','magazines','2021-10-14 12:00:26',3,1,1);
+INSERT  IGNORE INTO `innodb_table_stats` VALUES ('mysql','component','2021-11-19 15:38:23',0,1,0),('sys','sys_config','2021-11-19 15:37:33',2,1,0),('webapp','Articles','2021-11-19 15:38:54',4,1,4),('webapp','article_types','2021-11-19 15:38:24',3,1,1),('webapp','author','2021-11-19 15:38:34',4,1,1),('webapp','magazines','2021-11-19 15:38:44',3,1,1);
 /*!40000 ALTER TABLE `innodb_table_stats` ENABLE KEYS */;
 
 --
@@ -364,9 +362,9 @@ DROP TABLE IF EXISTS `password_history`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `password_history` (
   `Host` char(255) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL DEFAULT '',
-  `User` char(32) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `User` char(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `Password_timestamp` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  `Password` text COLLATE utf8_bin,
+  `Password` text CHARACTER SET utf8 COLLATE utf8_bin,
   PRIMARY KEY (`Host`,`User`,`Password_timestamp` DESC)
 ) /*!50100 TABLESPACE `mysql` */ ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8_bin STATS_PERSISTENT=0 ROW_FORMAT=DYNAMIC COMMENT='Password history for user accounts';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -413,11 +411,11 @@ DROP TABLE IF EXISTS `procs_priv`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `procs_priv` (
   `Host` char(255) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL DEFAULT '',
-  `Db` char(64) COLLATE utf8_bin NOT NULL DEFAULT '',
-  `User` char(32) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `Db` char(64) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
+  `User` char(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `Routine_name` char(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
-  `Routine_type` enum('FUNCTION','PROCEDURE') COLLATE utf8_bin NOT NULL,
-  `Grantor` varchar(288) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `Routine_type` enum('FUNCTION','PROCEDURE') CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `Grantor` varchar(288) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `Proc_priv` set('Execute','Alter Routine','Grant') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
   `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`Host`,`Db`,`User`,`Routine_name`,`Routine_type`),
@@ -443,11 +441,11 @@ DROP TABLE IF EXISTS `proxies_priv`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `proxies_priv` (
   `Host` char(255) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL DEFAULT '',
-  `User` char(32) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `User` char(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `Proxied_host` char(255) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL DEFAULT '',
-  `Proxied_user` char(32) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `Proxied_user` char(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `With_grant` tinyint(1) NOT NULL DEFAULT '0',
-  `Grantor` varchar(288) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `Grantor` varchar(288) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`Host`,`User`,`Proxied_host`,`Proxied_user`),
   KEY `Grantor` (`Grantor`)
@@ -579,9 +577,9 @@ DROP TABLE IF EXISTS `role_edges`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `role_edges` (
   `FROM_HOST` char(255) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL DEFAULT '',
-  `FROM_USER` char(32) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `FROM_USER` char(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `TO_HOST` char(255) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL DEFAULT '',
-  `TO_USER` char(32) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `TO_USER` char(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `WITH_ADMIN_OPTION` enum('N','Y') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'N',
   PRIMARY KEY (`FROM_HOST`,`FROM_USER`,`TO_HOST`,`TO_USER`)
 ) /*!50100 TABLESPACE `mysql` */ ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8_bin STATS_PERSISTENT=0 ROW_FORMAT=DYNAMIC COMMENT='Role hierarchy and role grants';
@@ -692,6 +690,7 @@ CREATE TABLE IF NOT EXISTS `slave_master_info` (
   `Master_zstd_compression_level` int unsigned NOT NULL COMMENT 'Compression level associated with zstd compression algorithm.',
   `Tls_ciphersuites` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT 'Ciphersuites used for TLS 1.3 communication with the master server.',
   `Source_connection_auto_failover` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Indicates whether the channel connection failover is enabled.',
+  `Gtid_only` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Indicates if this channel only uses GTIDs and does not persist positions.',
   PRIMARY KEY (`Channel_name`)
 ) /*!50100 TABLESPACE `mysql` */ ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 STATS_PERSISTENT=0 ROW_FORMAT=DYNAMIC COMMENT='Master Information';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -765,10 +764,10 @@ DROP TABLE IF EXISTS `tables_priv`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `tables_priv` (
   `Host` char(255) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL DEFAULT '',
-  `Db` char(64) COLLATE utf8_bin NOT NULL DEFAULT '',
-  `User` char(32) COLLATE utf8_bin NOT NULL DEFAULT '',
-  `Table_name` char(64) COLLATE utf8_bin NOT NULL DEFAULT '',
-  `Grantor` varchar(288) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `Db` char(64) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
+  `User` char(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
+  `Table_name` char(64) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
+  `Grantor` varchar(288) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Table_priv` set('Select','Insert','Update','Delete','Create','Drop','Grant','References','Index','Alter','Create View','Show view','Trigger') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
   `Column_priv` set('Select','Insert','Update','References') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
@@ -915,7 +914,7 @@ DROP TABLE IF EXISTS `user`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user` (
   `Host` char(255) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL DEFAULT '',
-  `User` char(32) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `User` char(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `Select_priv` enum('N','Y') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'N',
   `Insert_priv` enum('N','Y') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'N',
   `Update_priv` enum('N','Y') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'N',
@@ -953,8 +952,8 @@ CREATE TABLE `user` (
   `max_updates` int unsigned NOT NULL DEFAULT '0',
   `max_connections` int unsigned NOT NULL DEFAULT '0',
   `max_user_connections` int unsigned NOT NULL DEFAULT '0',
-  `plugin` char(64) COLLATE utf8_bin NOT NULL DEFAULT 'caching_sha2_password',
-  `authentication_string` text COLLATE utf8_bin,
+  `plugin` char(64) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT 'caching_sha2_password',
+  `authentication_string` text CHARACTER SET utf8 COLLATE utf8_bin,
   `password_expired` enum('N','Y') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'N',
   `password_last_changed` timestamp NULL DEFAULT NULL,
   `password_lifetime` smallint unsigned DEFAULT NULL,
@@ -975,7 +974,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES ('%','dbadmin','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','','','','',0,0,0,0,'caching_sha2_password','$A$005$_Wa)AI=X57!nFIw2XlZ2ZOGYuDWRdKqEctc2zRT.PTtNY1ydTNRNrOdF4','N','2021-10-14 09:16:56',NULL,'N','Y','Y',NULL,NULL,NULL,NULL),('localhost','debian-sys-maint','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','','','','',0,0,0,0,'caching_sha2_password','$A$005$ g\"6r&}Bj%.;7\ZLqaectOlhnTfkL0M6r/D2tEGZCC2BnaQTkxdgDeMyDE3','N','2021-10-14 09:07:44',NULL,'N','Y','Y',NULL,NULL,NULL,NULL),('localhost','mysql.infoschema','Y','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','','','','',0,0,0,0,'caching_sha2_password','$A$005$THISISACOMBINATIONOFINVALIDSALTANDPASSWORDTHATMUSTNEVERBRBEUSED','N','2021-10-14 09:07:44',NULL,'Y','N','N',NULL,NULL,NULL,NULL),('localhost','mysql.session','N','N','N','N','N','N','N','Y','N','N','N','N','N','N','N','Y','N','N','N','N','N','N','N','N','N','N','N','N','N','','','','',0,0,0,0,'caching_sha2_password','$A$005$THISISACOMBINATIONOFINVALIDSALTANDPASSWORDTHATMUSTNEVERBRBEUSED','N','2021-10-14 09:07:44',NULL,'Y','N','N',NULL,NULL,NULL,NULL),('localhost','mysql.sys','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','','','','',0,0,0,0,'caching_sha2_password','$A$005$THISISACOMBINATIONOFINVALIDSALTANDPASSWORDTHATMUSTNEVERBRBEUSED','N','2021-10-14 09:07:44',NULL,'Y','N','N',NULL,NULL,NULL,NULL),('localhost','root','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','','','','',0,0,0,0,'auth_socket','','N','2021-10-14 09:07:42',NULL,'N','Y','Y',NULL,NULL,NULL,NULL),('web','app','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','','','','',0,0,0,0,'mysql_native_password','*8A808154DE4D7DE9E2B89FE49C40E8DD239EF853','N','2021-10-15 22:43:12',NULL,'N','N','N',NULL,NULL,NULL,NULL);
+INSERT INTO `user` VALUES ('%','dbadmin','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','','','','',0,0,0,0,'caching_sha2_password','$A$005$_Wa)AI=X57!nFIw2XlZ2ZOGYuDWRdKqEctc2zRT.PTtNY1ydTNRNrOdF4','N','2021-10-14 09:16:56',NULL,'N','Y','Y',NULL,NULL,NULL,NULL),('localhost','debian-sys-maint','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','','','','',0,0,0,0,'caching_sha2_password','$A$005$ g\"6r&}Bj%.;7\ZLqaectOlhnTfkL0M6r/D2tEGZCC2BnaQTkxdgDeMyDE3','N','2021-10-14 09:07:44',NULL,'N','Y','Y',NULL,NULL,NULL,NULL),('localhost','mysql.infoschema','Y','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','','','','',0,0,0,0,'caching_sha2_password','$A$005$THISISACOMBINATIONOFINVALIDSALTANDPASSWORDTHATMUSTNEVERBRBEUSED','N','2021-10-14 09:07:44',NULL,'Y','N','N',NULL,NULL,NULL,NULL),('localhost','mysql.session','N','N','N','N','N','N','N','Y','N','N','N','N','N','N','N','Y','N','N','N','N','N','N','N','N','N','N','N','N','N','','','','',0,0,0,0,'caching_sha2_password','$A$005$THISISACOMBINATIONOFINVALIDSALTANDPASSWORDTHATMUSTNEVERBRBEUSED','N','2021-10-14 09:07:44',NULL,'Y','N','N',NULL,NULL,NULL,NULL),('localhost','mysql.sys','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','','','','',0,0,0,0,'caching_sha2_password','$A$005$THISISACOMBINATIONOFINVALIDSALTANDPASSWORDTHATMUSTNEVERBRBEUSED','N','2021-10-14 09:07:44',NULL,'Y','N','N',NULL,NULL,NULL,NULL),('localhost','root','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','','','','',0,0,0,0,'auth_socket','','N','2021-10-14 09:07:42',NULL,'N','Y','Y',NULL,NULL,NULL,NULL),('web.service','app','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','N','','','','',0,0,0,0,'mysql_native_password','*58319282EAB9E38D49CA25844B73DA62C80C2ABC','N','2021-11-20 13:27:47',NULL,'N','N','N',NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1026,4 +1025,4 @@ CREATE TABLE IF NOT EXISTS `slow_log` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-10-16  2:40:34
+-- Dump completed on 2021-11-21 17:23:33

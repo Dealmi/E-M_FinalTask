@@ -27,7 +27,7 @@ xpack.security.audit.enabled: false
 
 xpack.monitoring.enabled: true
 xpack.monitoring.kibana.collection.enabled: true
-xpack.monitoring.kibana.collection.interval: 30000
+xpack.monitoring.kibana.collection.interval: 300
 
 xpack.monitoring.ui.enabled: true
 xpack.monitoring.min_interval_seconds: 30
@@ -58,3 +58,5 @@ xpack.reporting.enabled: false
 
 #xpack.spaces.enabled: true
 #xpack.spaces.maxSpaces: 1000
+
+xpack.encryptedSavedObjects.encryptionKey: "j2Xv2Q92tPk3euwev4z4FsXQ2PCtZ2eU"

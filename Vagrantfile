@@ -12,7 +12,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "router" do |router|
     router.vm.hostname = "router"
     router.vm.provider "virtualbox" do |vb|
-      vb.memory = "3072"
+      vb.memory = "6144"
       vb.cpus = "2"
     end
        
@@ -23,6 +23,10 @@ Vagrant.configure("2") do |config|
     #router.vm.network "private_network", ip: "10.0.20.10", virtualbox__intnet: "net2"
     router.vm.network "private_network", auto_config: false, virtualbox__intnet: "net2"
     # Deleting default routes and adding dns and routing settings to network interface
+    
+    # Kibana port forwarding
+    router.vm.network "forwarded_port", guest: 5601, host: 5601
+
     router.vm.provision "file", source: "router/50-vagrant.yaml", destination: "~/50-vagrant.yaml"
     # router.vm.provision "shell", run: "always", inline: <<-SHELL
     #    sudo ip route delete 10.0.20.0/24
@@ -81,6 +85,46 @@ Vagrant.configure("2") do |config|
     #Installing wireshark
     router.vm.provision "shell", inline: "sudo DEBIAN_FRONTEND=noninteractive apt-get install termshark -y"
 
+    # Elasticsearch
+    router.vm.provision "shell", inline: <<-SHELL
+      wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -  
+      sudo apt-get install apt-transport-https -y
+      echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list
+      sudo apt-get update && sudo apt-get install elasticsearch -y
+      sudo /bin/systemctl daemon-reload
+      sudo /bin/systemctl enable elasticsearch.service
+    SHELL
+    router.vm.provision "file", source: "router/elasticsearch.yml", destination: "~/elasticsearch.yml"
+    router.vm.provision "shell", inline: <<-SHELL
+      sudo mv -f /home/vagrant/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml
+      sudo systemctl start elasticsearch.service
+    SHELL
+    #Kibana
+    router.vm.provision "shell", inline: <<-SHELL
+      sudo apt install kibana -y
+      sudo /bin/systemctl daemon-reload
+      sudo /bin/systemctl enable kibana.service
+    SHELL
+    router.vm.provision "file", source: "router/kibana.yml", destination: "~/kibana.yml"  
+    router.vm.provision "shell", inline: <<-SHELL
+      echo $(yes | sudo /usr/share/elasticsearch/bin/elasticsearch-setup-passwords auto) >> /home/vagrant/elasticpass
+      echo "elasticsearch.password: $( cat /home/vagrant/elasticpass | sed 's/PASSWORD/\\n/g' | grep "kibana_system =" | awk {'print $3'} )" >> /home/vagrant/kibana.yml
+      sudo mv -f /home/vagrant/kibana.yml /etc/kibana/
+      sudo chown root.kibana /etc/kibana/kibana.yml  
+      sudo systemctl start kibana.service
+    SHELL
+
+    #Elastic-agent + fleet server
+    router.vm.provision "shell", inline: <<-SHELL
+      wget https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-7.15.2-linux-x86_64.tar.gz
+      tar -xzf elastic-agent-7.15.2-linux-x86_64.tar.gz
+      cd elastic-agent-7.15.2-linux-x86_64
+      sudo ./elastic-agent install  -f \
+      --fleet-server-es=http://localhost:9200 \
+      --fleet-server-service-token=AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rva2VuLTE2Mzc4NzE4NjEwODQ6VElvODgxQlZTZDJFaDMzQWVEbGlXUQ \
+      --fleet-server-policy=24b5fc80-4bab-11ec-bc87-1b7d03251c9f
+    SHELL
+
     # Cleaning unused packets
     router.vm.provision "shell", inline: "sudo apt-get clean -y && sudo apt-get autoremove -y"
   end
@@ -90,12 +134,12 @@ Vagrant.configure("2") do |config|
   config.vm.define "data" do |data|
     data.vm.hostname = "data"
     data.vm.provider "virtualbox" do |vb|
-      vb.memory = "4096"
+      vb.memory = "2048"
       vb.cpus = "2"
     end
     
     # intranet 2
-    data.vm.network "private_network", type: "dhcp", virtualbox__intnet: "net2"
+    data.vm.network "private_network", auto_config: false, virtualbox__intnet: "net2"
     # Adding a routing
     data.vm.provision "file", source: "data/50-vagrant.yaml", destination: "~/50-vagrant.yaml"
     data.vm.provision "shell", inline: <<-SHELL
@@ -190,16 +234,14 @@ Vagrant.configure("2") do |config|
   config.vm.define "web" do |web|
     web.vm.hostname = "web"
     web.vm.provider "virtualbox" do |vb|
-      vb.memory = "4096"
+      vb.memory = "2048"
       vb.cpus = "2"
     end
     # External network
     web.vm.network "public_network", bridge: "Realtek PCIe GbE Family Controller"
     # intranet 1
-    web.vm.network "private_network", type: "dhcp", virtualbox__intnet: "net1"
-    # Kibana port forwarding
-    web.vm.network "forwarded_port", guest: 5601, host: 5601
-    
+    web.vm.network "private_network", auto_config: false, virtualbox__intnet: "net1"
+        
     # Adding a routing
     web.vm.provision "file", source: "web/50-vagrant.yaml", destination: "~/50-vagrant.yaml"
     web.vm.provision "shell", inline: <<-SHELL
@@ -217,66 +259,38 @@ Vagrant.configure("2") do |config|
       #apt install -y iptables
     SHELL
      
-    # Elasticsearch
-    web.vm.provision "shell", inline: <<-SHELL
-      wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -  
-      sudo apt-get install apt-transport-https -y
-      echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list
-      sudo apt-get update && sudo apt-get install elasticsearch -y
-      sudo /bin/systemctl daemon-reload
-      sudo /bin/systemctl enable elasticsearch.service
-    SHELL
-    web.vm.provision "file", source: "web/elasticsearch.yml", destination: "~/elasticsearch.yml"
-    web.vm.provision "shell", inline: <<-SHELL
-      sudo mv -f /home/vagrant/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml
-      sudo systemctl start elasticsearch.service
-    SHELL
-    #Kibana
-    web.vm.provision "shell", inline: <<-SHELL
-      sudo apt install kibana -y
-      sudo /bin/systemctl daemon-reload
-      sudo /bin/systemctl enable kibana.service
-    SHELL
-    web.vm.provision "file", source: "web/kibana.yml", destination: "~/kibana.yml"  
-    web.vm.provision "shell", inline: <<-SHELL
-      echo $(yes | sudo /usr/share/elasticsearch/bin/elasticsearch-setup-passwords auto) >> /home/vagrant/elasticpass
-      echo "elasticsearch.password: $( cat /home/vagrant/elasticpass | sed 's/PASSWORD/\\n/g' | grep "kibana_system =" | awk {'print $3'} )" >> /home/vagrant/kibana.yml
-      sudo mv -f /home/vagrant/kibana.yml /etc/kibana/
-      sudo chown root.kibana /etc/kibana/kibana.yml  
-      sudo systemctl start kibana.service
-    SHELL
-
     #Elastic-agent
     web.vm.provision "shell", inline: <<-SHELL
-      sudo apt install elastic-agent -y
-      
-    
+      wget https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-7.15.2-linux-x86_64.tar.gz
+      tar -xzf elastic-agent-7.15.2-linux-x86_64.tar.gz
+      cd elastic-agent-7.15.2-linux-x86_64
+      sudo ./elastic-agent install -f --url=https://web.service:8220 --enrollment-token=M0NoU1NIMEJCR1dERWZzZ2dIaDc6ZWlfUDFCYW9UQ3FiYW13RGM2ZjRiZw== --insecure
     SHELL
 
-    # Installing pip and mysql driver for python 3
-    web.vm.provision "file", source: "web/get-pip.py", destination: "~/get-pip.py"
-    web.vm.provision "shell", inline: "sudo python3 /home/vagrant/get-pip.py"
-    web.vm.provision "shell", inline: "sudo pip install mysql-connector-python"
+    # # Installing pip and mysql driver for python 3
+    # web.vm.provision "file", source: "web/get-pip.py", destination: "~/get-pip.py"
+    # web.vm.provision "shell", inline: "sudo python3 /home/vagrant/get-pip.py"
+    # web.vm.provision "shell", inline: "sudo pip install mysql-connector-python"
     
-    # Nginx
-    web.vm.provision "shell", inline: "sudo apt install -y nginx"
-    web.vm.provision "file", source: "web/website.conf", destination: "~/website.conf"
-    web.vm.provision "shell", inline: <<-SHELL
-      sudo rm -f /etc/nginx/sites-enabled/default
-      sudo mv -f /home/vagrant/website.conf /etc/nginx/sites-available/website.conf
-      sudo ln -s /etc/nginx/sites-available/website.conf /etc/nginx/sites-enabled/website.conf
-      sudo systemctl enable nginx && sudo systemctl start nginx
-      mkdir -p /local/files && mkdir /local/scripts
-    SHELL
-    #Adding files to the web-server
-    web.vm.provision "file", source: "web/index.html", destination: "~/index.html"
-    web.vm.provision "file", source: "web/getData.py", destination: "~/getData.py"
-    web.vm.provision "file", source: "web/crontab", destination: "~/crontab"
-    web.vm.provision "shell", inline: <<-SHELL
-      sudo mv -f /home/vagrant/index.html /local/files/index.html
-      sudo mv -f /home/vagrant/getData.py /local/scripts/
-      sudo chown root.root /home/vagrant/crontab && sudo mv -f /home/vagrant/crontab /etc/
-    SHELL
+    # # Nginx
+    # web.vm.provision "shell", inline: "sudo apt install -y nginx"
+    # web.vm.provision "file", source: "web/website.conf", destination: "~/website.conf"
+    # web.vm.provision "shell", inline: <<-SHELL
+    #   sudo rm -f /etc/nginx/sites-enabled/default
+    #   sudo mv -f /home/vagrant/website.conf /etc/nginx/sites-available/website.conf
+    #   sudo ln -s /etc/nginx/sites-available/website.conf /etc/nginx/sites-enabled/website.conf
+    #   sudo systemctl enable nginx && sudo systemctl start nginx
+    #   mkdir -p /local/files && mkdir /local/scripts
+    # SHELL
+    # #Adding files to the web-server
+    # web.vm.provision "file", source: "web/index.html", destination: "~/index.html"
+    # web.vm.provision "file", source: "web/getData.py", destination: "~/getData.py"
+    # web.vm.provision "file", source: "web/crontab", destination: "~/crontab"
+    # web.vm.provision "shell", inline: <<-SHELL
+    #   sudo mv -f /home/vagrant/index.html /local/files/index.html
+    #   sudo mv -f /home/vagrant/getData.py /local/scripts/
+    #   sudo chown root.root /home/vagrant/crontab && sudo mv -f /home/vagrant/crontab /etc/
+    # SHELL
     # Cleaning unused packets
     web.vm.provision "shell", inline: "sudo apt-get clean -y && sudo apt-get autoremove -y"
   end

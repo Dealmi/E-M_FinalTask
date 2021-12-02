@@ -4,34 +4,28 @@
 # WARNING: This file works only with virtualbox provider!!!
 
 Vagrant.configure("2") do |config|
-  
-  config.vm.box = "ubuntu/focal64"
-
+    
   ####################################################[ROUTER]##################################################################
 
   config.vm.define "router" do |router|
+    router.vm.box = "Dealmi/ubuntu20_elk_agent" #ELK Included and fleet server is up and running
     router.vm.hostname = "router"
     router.vm.provider "virtualbox" do |vb|
       vb.memory = "6144"
       vb.cpus = "2"
     end
+  
        
     # intranet 1
-    #router.vm.network "private_network", ip: "10.0.10.10", virtualbox__intnet: "net1"
     router.vm.network "private_network", auto_config: false, virtualbox__intnet: "net1"
     # intranet 2
-    #router.vm.network "private_network", ip: "10.0.20.10", virtualbox__intnet: "net2"
     router.vm.network "private_network", auto_config: false, virtualbox__intnet: "net2"
-    # Deleting default routes and adding dns and routing settings to network interface
-    
+       
     # Kibana port forwarding
     router.vm.network "forwarded_port", guest: 5601, host: 5601
 
     router.vm.provision "file", source: "router/50-vagrant.yaml", destination: "~/50-vagrant.yaml"
-    # router.vm.provision "shell", run: "always", inline: <<-SHELL
-    #    sudo ip route delete 10.0.20.0/24
-    #    sudo ip route delete 10.0.10.0/24
-    # SHELL
+   
     router.vm.provision "shell", inline: <<-SHELL
       sudo chown root.root 50-vagrant.yaml && sudo chmod 644 50-vagrant.yaml
       sudo mv -f /home/vagrant/50-vagrant.yaml  /etc/netplan
@@ -41,6 +35,10 @@ Vagrant.configure("2") do |config|
     router.vm.provision "shell", inline: <<-SHELL
     # Updating the system
       sudo timedatectl set-timezone Europe/Moscow
+     # Adding Elasticsearch repository
+      wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -  
+      sudo apt-get install apt-transport-https -y
+      echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list 
       sudo apt-get update
       sudo apt-get full-upgrade -y
       sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams logs
@@ -85,46 +83,6 @@ Vagrant.configure("2") do |config|
     #Installing wireshark
     router.vm.provision "shell", inline: "sudo DEBIAN_FRONTEND=noninteractive apt-get install termshark -y"
 
-    # Elasticsearch
-    router.vm.provision "shell", inline: <<-SHELL
-      wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -  
-      sudo apt-get install apt-transport-https -y
-      echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list
-      sudo apt-get update && sudo apt-get install elasticsearch -y
-      sudo /bin/systemctl daemon-reload
-      sudo /bin/systemctl enable elasticsearch.service
-    SHELL
-    router.vm.provision "file", source: "router/elasticsearch.yml", destination: "~/elasticsearch.yml"
-    router.vm.provision "shell", inline: <<-SHELL
-      sudo mv -f /home/vagrant/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml
-      sudo systemctl start elasticsearch.service
-    SHELL
-    #Kibana
-    router.vm.provision "shell", inline: <<-SHELL
-      sudo apt install kibana -y
-      sudo /bin/systemctl daemon-reload
-      sudo /bin/systemctl enable kibana.service
-    SHELL
-    router.vm.provision "file", source: "router/kibana.yml", destination: "~/kibana.yml"  
-    router.vm.provision "shell", inline: <<-SHELL
-      echo $(yes | sudo /usr/share/elasticsearch/bin/elasticsearch-setup-passwords auto) >> /home/vagrant/elasticpass
-      echo "elasticsearch.password: $( cat /home/vagrant/elasticpass | sed 's/PASSWORD/\\n/g' | grep "kibana_system =" | awk {'print $3'} )" >> /home/vagrant/kibana.yml
-      sudo mv -f /home/vagrant/kibana.yml /etc/kibana/
-      sudo chown root.kibana /etc/kibana/kibana.yml  
-      sudo systemctl start kibana.service
-    SHELL
-
-    #Elastic-agent + fleet server
-    router.vm.provision "shell", inline: <<-SHELL
-      wget https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-7.15.2-linux-x86_64.tar.gz
-      tar -xzf elastic-agent-7.15.2-linux-x86_64.tar.gz
-      cd elastic-agent-7.15.2-linux-x86_64
-      sudo ./elastic-agent install  -f \
-      --fleet-server-es=http://localhost:9200 \
-      --fleet-server-service-token=AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rva2VuLTE2Mzc4NzE4NjEwODQ6VElvODgxQlZTZDJFaDMzQWVEbGlXUQ \
-      --fleet-server-policy=24b5fc80-4bab-11ec-bc87-1b7d03251c9f
-    SHELL
-
     # Cleaning unused packets
     router.vm.provision "shell", inline: "sudo apt-get clean -y && sudo apt-get autoremove -y"
   end
@@ -132,15 +90,16 @@ Vagrant.configure("2") do |config|
   ####################################################[DATA]#########################################################################
   
   config.vm.define "data" do |data|
+    data.vm.box = "ubuntu/focal64"  
     data.vm.hostname = "data"
     data.vm.provider "virtualbox" do |vb|
       vb.memory = "2048"
       vb.cpus = "2"
     end
-    
-    # intranet 2
+  # intranet 2
     data.vm.network "private_network", auto_config: false, virtualbox__intnet: "net2"
-    # Adding a routing
+  
+    #Adding a routing
     data.vm.provision "file", source: "data/50-vagrant.yaml", destination: "~/50-vagrant.yaml"
     data.vm.provision "shell", inline: <<-SHELL
       sudo chown root.root 50-vagrant.yaml && sudo chmod 644 50-vagrant.yaml
@@ -232,6 +191,7 @@ Vagrant.configure("2") do |config|
  ########################################################[WEB]##########################################################
   
   config.vm.define "web" do |web|
+    web.vm.box = "ubuntu/focal64"
     web.vm.hostname = "web"
     web.vm.provider "virtualbox" do |vb|
       vb.memory = "2048"

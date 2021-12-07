@@ -9,10 +9,11 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "router" do |router|
     router.vm.box = "Dealmi/ubuntu20_elk_agent" #ELK Included and fleet server is up and running
+    # router.vm.box_version = "1.0.1"
     router.vm.hostname = "router"
     router.vm.provider "virtualbox" do |vb|
       vb.memory = "6144"
-      vb.cpus = "2"
+      vb.cpus = "3"
     end
   
        
@@ -35,13 +36,9 @@ Vagrant.configure("2") do |config|
     router.vm.provision "shell", inline: <<-SHELL
     # Updating the system
       sudo timedatectl set-timezone Europe/Moscow
-     # Adding Elasticsearch repository
-      wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -  
-      sudo apt-get install apt-transport-https -y
-      echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list 
       sudo apt-get update
       sudo apt-get full-upgrade -y
-      sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams logs
+      sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams in log-files
       # installing DHCP server
       sudo apt-get install -y isc-dhcp-server
       # installing DNS server
@@ -84,7 +81,11 @@ Vagrant.configure("2") do |config|
     router.vm.provision "shell", inline: "sudo DEBIAN_FRONTEND=noninteractive apt-get install termshark -y"
 
     # Cleaning unused packets
-    router.vm.provision "shell", inline: "sudo apt-get clean -y && sudo apt-get autoremove -y"
+    router.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get clean -y
+      # sudo dpkg --configure -a
+      # sudo apt-get autoremove -y
+    SHELL
   end
 
   ####################################################[DATA]#########################################################################
@@ -94,7 +95,7 @@ Vagrant.configure("2") do |config|
     data.vm.hostname = "data"
     data.vm.provider "virtualbox" do |vb|
       vb.memory = "2048"
-      vb.cpus = "2"
+      vb.cpus = "1"
     end
   # intranet 2
     data.vm.network "private_network", auto_config: false, virtualbox__intnet: "net2"
@@ -140,9 +141,9 @@ Vagrant.configure("2") do |config|
       sudo timedatectl set-timezone Europe/Moscow
       sudo apt-get update
       sudo apt-get full-upgrade -y
-      sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams logs
-    
-    # Installing MySQL server
+      sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams in log-files
+
+     # Installing MySQL server
       sudo apt install -y mysql-server
     SHELL
     #Installing mail tools
@@ -186,6 +187,12 @@ Vagrant.configure("2") do |config|
      sudo systemctl start backup
    SHELL
 
+    #Elastic-agent 
+    data.vm.provision "shell", inline: <<-SHELL
+     wget https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-7.15.2-linux-x86_64.tar.gz
+     tar -xzf elastic-agent-7.15.2-linux-x86_64.tar.gz
+     sudo /home/vagrant/elastic-agent-7.15.2-linux-x86_64/elastic-agent install -f --url=https://router:8220 --enrollment-token=SVo1OGpIMEJIamFMRU9CeUN4Ujc6bGFJNGhPUW9STTJzVU1USEFMc0x3QQ== --insecure
+    SHELL
   end
 
  ########################################################[WEB]##########################################################
@@ -195,7 +202,7 @@ Vagrant.configure("2") do |config|
     web.vm.hostname = "web"
     web.vm.provider "virtualbox" do |vb|
       vb.memory = "2048"
-      vb.cpus = "2"
+      vb.cpus = "1"
     end
     # External network
     web.vm.network "public_network", bridge: "Realtek PCIe GbE Family Controller"
@@ -203,7 +210,7 @@ Vagrant.configure("2") do |config|
     web.vm.network "private_network", auto_config: false, virtualbox__intnet: "net1"
         
     # Adding a routing
-    web.vm.provision "file", source: "web/50-vagrant.yaml", destination: "~/50-vagrant.yaml"
+    web.vm.provision "file", source: "web/50-vagrant.yaml", destination: "/home/vagrant/50-vagrant.yaml"
     web.vm.provision "shell", inline: <<-SHELL
       sudo chown root.root 50-vagrant.yaml && sudo chmod 644 50-vagrant.yaml
       sudo mv -f /home/vagrant/50-vagrant.yaml  /etc/netplan
@@ -215,50 +222,65 @@ Vagrant.configure("2") do |config|
       sudo timedatectl set-timezone Europe/Moscow
       sudo apt-get update
       sudo apt-get full-upgrade -y 
-      sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams logs
+      sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams in log-files
       #apt install -y iptables
     SHELL
-     
-    #Elastic-agent
+    
+    # Installing pip and mysql driver for python 3
+    web.vm.provision "file", source: "web/get-pip.py", destination: "~/get-pip.py"
+    web.vm.provision "shell", inline: "sudo python3 /home/vagrant/get-pip.py"
+    web.vm.provision "shell", inline: "sudo pip install mysql-connector-python"
+    
+    # Nginx
+    web.vm.provision "shell", inline: "sudo apt install -y nginx"
+    web.vm.provision "file", source: "web/nginx/sites-available/website.conf", destination: "~/website.conf"
+    web.vm.provision "file", source: "web/nginx/sites-available/website.conf.protected", destination: "~/website.conf.protected"
+    web.vm.provision "file", source: "web/nginx/ssl/webnews.crt", destination: "~/webnews.crt"
+    web.vm.provision "file", source: "web/nginx/ssl/webnews.key", destination: "~/webnews.key"
+    web.vm.provision "shell", inline: <<-SHELL
+      sudo rm -f /etc/nginx/sites-enabled/default
+      sudo mv -f /home/vagrant/website.conf /etc/nginx/sites-available/website.conf
+      sudo mv -f /home/vagrant/website.conf.protected /etc/nginx/sites-available/website.conf.protected
+      sudo mkdir /etc/nginx/ssl
+      sudo chmod 700 /etc/nginx/ssl
+      sudo mv -f /home/vagrant/webnews.crt /etc/nginx/ssl/
+      sudo mv -f /home/vagrant/webnews.key /etc/nginx/ssl/
+      sudo ln -s /etc/nginx/sites-available/website.conf /etc/nginx/sites-enabled/website.conf
+      sudo systemctl enable nginx && sudo systemctl restart nginx
+      mkdir -p /local/files && mkdir /local/scripts
+    SHELL
+    #Adding files to the web-server
+    web.vm.provision "file", source: "web/start.html", destination: "~/start.html"
+    web.vm.provision "file", source: "web/getData.py", destination: "~/getData.py"
+    web.vm.provision "file", source: "web/webnews", destination: "~/webnews"
+    web.vm.provision "shell", inline: <<-SHELL
+      sudo mv -f /home/vagrant/start.html /local/files/
+      sudo mv -f /home/vagrant/getData.py /local/scripts/
+      sudo chown root.root /home/vagrant/webnews && sudo mv -f /home/vagrant/webnews /etc/cron.d/
+      sudo systemctl restart cron
+    SHELL
+
+    # Elastic-agent
     web.vm.provision "shell", inline: <<-SHELL
       wget https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-7.15.2-linux-x86_64.tar.gz
       tar -xzf elastic-agent-7.15.2-linux-x86_64.tar.gz
-      cd elastic-agent-7.15.2-linux-x86_64
-      sudo ./elastic-agent install -f --url=https://web.service:8220 --enrollment-token=M0NoU1NIMEJCR1dERWZzZ2dIaDc6ZWlfUDFCYW9UQ3FiYW13RGM2ZjRiZw== --insecure
+      sudo /home/vagrant/elastic-agent-7.15.2-linux-x86_64/elastic-agent install -f --url=https://router:8220 --enrollment-token=SVo1OGpIMEJIamFMRU9CeUN4Ujc6bGFJNGhPUW9STTJzVU1USEFMc0x3QQ== --insecure
     SHELL
 
-    # # Installing pip and mysql driver for python 3
-    # web.vm.provision "file", source: "web/get-pip.py", destination: "~/get-pip.py"
-    # web.vm.provision "shell", inline: "sudo python3 /home/vagrant/get-pip.py"
-    # web.vm.provision "shell", inline: "sudo pip install mysql-connector-python"
-    
-    # # Nginx
-    # web.vm.provision "shell", inline: "sudo apt install -y nginx"
-    # web.vm.provision "file", source: "web/website.conf", destination: "~/website.conf"
-    # web.vm.provision "shell", inline: <<-SHELL
-    #   sudo rm -f /etc/nginx/sites-enabled/default
-    #   sudo mv -f /home/vagrant/website.conf /etc/nginx/sites-available/website.conf
-    #   sudo ln -s /etc/nginx/sites-available/website.conf /etc/nginx/sites-enabled/website.conf
-    #   sudo systemctl enable nginx && sudo systemctl start nginx
-    #   mkdir -p /local/files && mkdir /local/scripts
-    # SHELL
-    # #Adding files to the web-server
-    # web.vm.provision "file", source: "web/index.html", destination: "~/index.html"
-    # web.vm.provision "file", source: "web/getData.py", destination: "~/getData.py"
-    # web.vm.provision "file", source: "web/crontab", destination: "~/crontab"
-    # web.vm.provision "shell", inline: <<-SHELL
-    #   sudo mv -f /home/vagrant/index.html /local/files/index.html
-    #   sudo mv -f /home/vagrant/getData.py /local/scripts/
-    #   sudo chown root.root /home/vagrant/crontab && sudo mv -f /home/vagrant/crontab /etc/
-    # SHELL
+
     # Cleaning unused packets
     web.vm.provision "shell", inline: "sudo apt-get clean -y && sudo apt-get autoremove -y"
   end
-
-  
-  
  
 end #End of the file *********************************************************************************************
+
+
+
+
+
+
+
+
 
 
   # Every Vagrant development environment requires a box. You can search for

@@ -79,13 +79,7 @@ Vagrant.configure("2") do |config|
 
     #Installing wireshark
     router.vm.provision "shell", inline: "sudo DEBIAN_FRONTEND=noninteractive apt-get install termshark -y"
-
-    # Cleaning unused packets
-    router.vm.provision "shell", inline: <<-SHELL
-      sudo apt-get clean -y
-      # sudo dpkg --configure -a
-      # sudo apt-get autoremove -y
-    SHELL
+  
   end
 
   ####################################################[DATA]#########################################################################
@@ -97,7 +91,7 @@ Vagrant.configure("2") do |config|
       vb.memory = "2048"
       vb.cpus = "1"
     end
-  # intranet 2
+   # intranet 2
     data.vm.network "private_network", auto_config: false, virtualbox__intnet: "net2"
   
     #Adding a routing
@@ -150,7 +144,6 @@ Vagrant.configure("2") do |config|
     data.vm.provision "shell", inline:"sudo DEBIAN_FRONTEND=noninteractive apt install mailutils -y"
 
    # MySQL
-   #TODO: See if i can move database to LVM
    data.vm.provision "file", source: "data/mysqld.cnf", destination: "~/mysqld.cnf"
    data.vm.provision "shell", inline: <<-SHELL
       sudo mkdir /local/files/mysql
@@ -266,10 +259,6 @@ Vagrant.configure("2") do |config|
       tar -xzf elastic-agent-7.15.2-linux-x86_64.tar.gz
       sudo /home/vagrant/elastic-agent-7.15.2-linux-x86_64/elastic-agent install -f --url=https://router:8220 --enrollment-token=SVo1OGpIMEJIamFMRU9CeUN4Ujc6bGFJNGhPUW9STTJzVU1USEFMc0x3QQ== --insecure
     SHELL
-
-
-    # Cleaning unused packets
-    web.vm.provision "shell", inline: "sudo apt-get clean -y && sudo apt-get autoremove -y"
   end
  
 end #End of the file *********************************************************************************************

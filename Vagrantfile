@@ -4,6 +4,7 @@
 # WARNING: This file works only with virtualbox provider!!!
 
 Vagrant.configure("2") do |config|
+  # config.vm.box_check_update = false
     
   ####################################################[ROUTER]##################################################################
 
@@ -34,11 +35,12 @@ Vagrant.configure("2") do |config|
     SHELL
 
     router.vm.provision "shell", inline: <<-SHELL
-    # Updating the system
+      # Updating the system
       sudo timedatectl set-timezone Europe/Moscow
+      sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams in log-files
+      sudo apt remove ufw -y #we gonna use standart iptables rules management
       sudo apt-get update
       sudo apt-get full-upgrade -y
-      sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams in log-files
       # installing DHCP server
       sudo apt-get install -y isc-dhcp-server
       # installing DNS server
@@ -79,7 +81,17 @@ Vagrant.configure("2") do |config|
 
     #Installing wireshark
     router.vm.provision "shell", inline: "sudo DEBIAN_FRONTEND=noninteractive apt-get install termshark -y"
-  
+    
+    #IP-tables saver
+    router.vm.provision "shell", inline: "sudo DEBIAN_FRONTEND=noninteractive apt-get install iptables-persistent -y"
+    #IP-tables rules
+    router.vm.provision "file", source: "router/rules.v4", destination: "/home/vagrant/rules.v4"
+    router.vm.provision "shell", inline: <<-SHELL
+      sudo chmod 644 /home/vagrant/rules.v4 
+      sudo chown root.root /home/vagrant/rules.v4 && sudo chmod 644 /home/vagrant/rules.v4
+      sudo mv -f /home/vagrant/rules.v4 /etc/iptables
+      sudo iptables-restore /etc/iptables/rules.v4
+    SHELL
   end
 
   ####################################################[DATA]#########################################################################
@@ -133,9 +145,11 @@ Vagrant.configure("2") do |config|
     # System update
     data.vm.provision "shell", inline: <<-SHELL
       sudo timedatectl set-timezone Europe/Moscow
+      sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams in log-files
+      sudo apt remove ufw -y #we gonna use standart iptables rules management
       sudo apt-get update
       sudo apt-get full-upgrade -y
-      sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams in log-files
+      
 
      # Installing MySQL server
       sudo apt install -y mysql-server
@@ -182,9 +196,20 @@ Vagrant.configure("2") do |config|
 
     #Elastic-agent 
     data.vm.provision "shell", inline: <<-SHELL
-     wget https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-7.15.2-linux-x86_64.tar.gz
+     wget -q https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-7.15.2-linux-x86_64.tar.gz
      tar -xzf elastic-agent-7.15.2-linux-x86_64.tar.gz
      sudo /home/vagrant/elastic-agent-7.15.2-linux-x86_64/elastic-agent install -f --url=https://router:8220 --enrollment-token=SVo1OGpIMEJIamFMRU9CeUN4Ujc6bGFJNGhPUW9STTJzVU1USEFMc0x3QQ== --insecure
+    SHELL
+
+    #IP-tables saver
+    data.vm.provision "shell", inline: "sudo DEBIAN_FRONTEND=noninteractive apt-get install iptables-persistent -y"
+    #IP-tables rules
+    data.vm.provision "file", source: "data/rules.v4", destination: "/home/vagrant/rules.v4"
+    data.vm.provision "shell", inline: <<-SHELL
+      sudo chmod 644 /home/vagrant/rules.v4 
+      sudo chown root.root /home/vagrant/rules.v4 && sudo chmod 644 /home/vagrant/rules.v4
+      sudo mv -f /home/vagrant/rules.v4 /etc/iptables
+      sudo iptables-restore /etc/iptables/rules.v4
     SHELL
   end
 
@@ -213,9 +238,11 @@ Vagrant.configure("2") do |config|
     # Updating the system
     web.vm.provision "shell", inline: <<-SHELL
       sudo timedatectl set-timezone Europe/Moscow
+      sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams in log-files
+      sudo apt remove ufw -y #we gonna use standart iptables rules management
       sudo apt-get update
       sudo apt-get full-upgrade -y 
-      sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams in log-files
+      
       #apt install -y iptables
     SHELL
     
@@ -249,15 +276,26 @@ Vagrant.configure("2") do |config|
     web.vm.provision "shell", inline: <<-SHELL
       sudo mv -f /home/vagrant/start.html /local/files/
       sudo mv -f /home/vagrant/getData.py /local/scripts/
-      sudo chown root.root /home/vagrant/webnews && sudo mv -f /home/vagrant/webnews /etc/cron.d/
+      sudo chown root.root /home/vagrant/webnews && sudo chmod 644 /home/vagrant/webnews && sudo mv -f /home/vagrant/webnews /etc/cron.d/
       sudo systemctl restart cron
     SHELL
 
     # Elastic-agent
     web.vm.provision "shell", inline: <<-SHELL
-      wget https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-7.15.2-linux-x86_64.tar.gz
+      wget -q https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-7.15.2-linux-x86_64.tar.gz
       tar -xzf elastic-agent-7.15.2-linux-x86_64.tar.gz
       sudo /home/vagrant/elastic-agent-7.15.2-linux-x86_64/elastic-agent install -f --url=https://router:8220 --enrollment-token=SVo1OGpIMEJIamFMRU9CeUN4Ujc6bGFJNGhPUW9STTJzVU1USEFMc0x3QQ== --insecure
+    SHELL
+
+    #IP-tables saver
+    web.vm.provision "shell", inline: "sudo DEBIAN_FRONTEND=noninteractive apt-get install iptables-persistent -y"
+    #IP-tables rules
+    web.vm.provision "file", source: "web/rules.v4", destination: "/home/vagrant/rules.v4"
+    web.vm.provision "shell", inline: <<-SHELL
+      sudo chmod 644 /home/vagrant/rules.v4 
+      sudo chown root.root /home/vagrant/rules.v4 && sudo chmod 644 /home/vagrant/rules.v4
+      sudo mv -f /home/vagrant/rules.v4 /etc/iptables
+      sudo iptables-restore /etc/iptables/rules.v4
     SHELL
   end
  

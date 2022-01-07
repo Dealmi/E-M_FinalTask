@@ -39,6 +39,7 @@ Vagrant.configure("2") do |config|
       sudo timedatectl set-timezone Europe/Moscow
       sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams in log-files
       sudo apt remove ufw -y #we gonna use standart iptables rules management
+      sudo mv /etc/apt/sources.list.d/elastic-7.x.list /home/vagrant 
       sudo apt-get update
       sudo apt-get full-upgrade -y
       # installing DHCP server
@@ -82,18 +83,36 @@ Vagrant.configure("2") do |config|
     #Installing wireshark
     router.vm.provision "shell", inline: "sudo DEBIAN_FRONTEND=noninteractive apt-get install termshark -y"
     
+    #Adding rsyslogd config for iptables
+    router.vm.provision "file", source: "router/19-iptables.conf", destination: "/home/vagrant/19-iptables.conf"
+    router.vm.provision "shell", inline: <<-SHELL
+      sudo chmod 644 /home/vagrant/19-iptables.conf 
+      sudo chown root.root /home/vagrant/19-iptables.conf
+      sudo mv -f /home/vagrant/19-iptables.conf  /etc/rsyslog.d
+    SHELL
+
+    #Adding iptables logfile rotation
+    router.vm.provision "file", source: "router/iptables", destination: "/home/vagrant/iptables"
+    router.vm.provision "shell", inline: <<-SHELL
+      sudo chmod 644 /home/vagrant/iptables 
+      sudo chown root.root /home/vagrant/iptables 
+      sudo mv -f /home/vagrant/iptables /etc/logrotate.d/
+    SHELL
     #IP-tables saver
     router.vm.provision "shell", inline: "sudo DEBIAN_FRONTEND=noninteractive apt-get install iptables-persistent -y"
     #IP-tables rules
     router.vm.provision "file", source: "router/rules.v4", destination: "/home/vagrant/rules.v4"
+    router.vm.provision "file", source: "router/rules.fix", destination: "/home/vagrant/rules.fix"
     router.vm.provision "shell", inline: <<-SHELL
-      sudo chmod 644 /home/vagrant/rules.v4 
-      sudo chown root.root /home/vagrant/rules.v4 && sudo chmod 644 /home/vagrant/rules.v4
-      sudo mv -f /home/vagrant/rules.v4 /etc/iptables
-      sudo iptables-restore /etc/iptables/rules.v4
+      sudo chmod 644 /home/vagrant/rules.* 
+      sudo chown root.root /home/vagrant/rules.* 
+      sudo mv -f /home/vagrant/rules.* /etc/iptables
     SHELL
+     #Apply firewall rules and reboot
+     router.vm.provision "shell", inline: "sudo iptables-restore /etc/iptables/rules.fix" #We need this to keep connection alive between vagrant and guest
+     router.vm.provision "shell", inline: "sudo iptables-restore /etc/iptables/rules.v4", reboot: true
   end
-
+    
   ####################################################[DATA]#########################################################################
   
   config.vm.define "data" do |data|
@@ -205,12 +224,16 @@ Vagrant.configure("2") do |config|
     data.vm.provision "shell", inline: "sudo DEBIAN_FRONTEND=noninteractive apt-get install iptables-persistent -y"
     #IP-tables rules
     data.vm.provision "file", source: "data/rules.v4", destination: "/home/vagrant/rules.v4"
+    data.vm.provision "file", source: "data/rules.fix", destination: "/home/vagrant/rules.fix"
     data.vm.provision "shell", inline: <<-SHELL
-      sudo chmod 644 /home/vagrant/rules.v4 
-      sudo chown root.root /home/vagrant/rules.v4 && sudo chmod 644 /home/vagrant/rules.v4
-      sudo mv -f /home/vagrant/rules.v4 /etc/iptables
-      sudo iptables-restore /etc/iptables/rules.v4
+      sudo chmod 644 /home/vagrant/rules.* 
+      sudo chown root.root /home/vagrant/rules.* 
+      sudo mv -f /home/vagrant/rules.* /etc/iptables
     SHELL
+    #Apply firewall rules and reboot
+    data.vm.provision "shell", inline: "sudo iptables-restore /etc/iptables/rules.fix" #We need this to keep connection alive between vagrant and guest
+    data.vm.provision "shell", inline: "sudo iptables-restore /etc/iptables/rules.v4", reboot: true
+
   end
 
  ########################################################[WEB]##########################################################
@@ -242,8 +265,6 @@ Vagrant.configure("2") do |config|
       sudo apt remove ufw -y #we gonna use standart iptables rules management
       sudo apt-get update
       sudo apt-get full-upgrade -y 
-      
-      #apt install -y iptables
     SHELL
     
     # Installing pip and mysql driver for python 3
@@ -291,12 +312,16 @@ Vagrant.configure("2") do |config|
     web.vm.provision "shell", inline: "sudo DEBIAN_FRONTEND=noninteractive apt-get install iptables-persistent -y"
     #IP-tables rules
     web.vm.provision "file", source: "web/rules.v4", destination: "/home/vagrant/rules.v4"
+    web.vm.provision "file", source: "web/rules.fix", destination: "/home/vagrant/rules.fix"
     web.vm.provision "shell", inline: <<-SHELL
-      sudo chmod 644 /home/vagrant/rules.v4 
-      sudo chown root.root /home/vagrant/rules.v4 && sudo chmod 644 /home/vagrant/rules.v4
-      sudo mv -f /home/vagrant/rules.v4 /etc/iptables
-      sudo iptables-restore /etc/iptables/rules.v4
+      sudo chmod 644 /home/vagrant/rules.* 
+      sudo chown root.root /home/vagrant/rules.*
+      sudo mv -f /home/vagrant/rules.* /etc/iptables
     SHELL
+    #Apply firewall rules and reboot
+    web.vm.provision "shell", inline: "sudo iptables-restore /etc/iptables/rules.fix" #We need this to keep connection alive between vagrant and guest
+    web.vm.provision "shell", inline: "sudo iptables-restore /etc/iptables/rules.v4", reboot: true
+       
   end
  
 end #End of the file *********************************************************************************************

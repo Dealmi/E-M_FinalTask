@@ -19,7 +19,7 @@ INNER JOIN webapp.article_types ON Articles.article_types_id = article_types.id)
 INNER JOIN webapp.author ON Articles.author_id = author.id) order by Articles.id;") 
 result = myCursor.fetchall() #list of tuples
 
-# Let's make a webpage!
+# Let's create a webpage!
 news=open("/local/files/news.html", "w")
 # The upper part of the html page
 upperHtml='''

@@ -23,6 +23,8 @@
 
 # Outbound elastic fleet connection
 -A OUTPUT -p tcp -m tcp --dport 8220 -j ACCEPT
+-A OUTPUT -p tcp -m tcp --dport 9300 -j ACCEPT
+-A OUTPUT -p tcp -m tcp --dport 9200 -j ACCEPT
 
 # inbound mysql connection
 -A INPUT -p tcp -m tcp --dport 3306 -m state --state NEW -j ACCEPT

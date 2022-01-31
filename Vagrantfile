@@ -39,7 +39,7 @@ Vagrant.configure("2") do |config|
       sudo timedatectl set-timezone Europe/Moscow
       sudo apt remove multipath-tools -y  #we don't have devices for this daemon and it just spams in log-files
       sudo apt remove ufw -y #we gonna use standart iptables rules management
-      sudo mv /etc/apt/sources.list.d/elastic-7.x.list /home/vagrant #turning off ELK update
+      # sudo mv /etc/apt/sources.list.d/elastic-7.x.list /home/vagrant #turning off ELK update
       sudo apt-get update
       sudo apt-get full-upgrade -y
       # installing DHCP server

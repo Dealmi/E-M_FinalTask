@@ -1,1 +1,10 @@
-# Epam_FinalTask
+This is a demo project of 3 vm's controlled by Vagrant. 
+
+1st VM is web-server, 2nd is router and 3rd is a data-base server
+
+1st and 3rd VMS are in different subnetworks connected through 2nd VM acting as a router, DNS and DHCP server.
+
+Project also includes some scripts in bash and Python.
+
+Also security mesures are demonstrated.
+

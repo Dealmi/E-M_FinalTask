@@ -8,3 +8,5 @@ Project also includes some scripts in bash and Python.
 
 Also security mesures are demonstrated.
 
+ELK stack is implemented for monitoring of hardware and network of all 3 VMs
+
